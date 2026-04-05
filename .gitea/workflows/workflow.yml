@@ -4,7 +4,7 @@ on:
     branches:
       - main # mainブランチに対して実行する
 env:
-  NODE_VERSION: "24.13.1" # 使用するNode.jsのバージョンを定義する
+  NODE_VERSION: "24.14.1" # 使用するNode.jsのバージョンを定義する
 jobs:
   typecheck:
     runs-on: ubuntu-latest

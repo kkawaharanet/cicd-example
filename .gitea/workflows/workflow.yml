@@ -55,7 +55,7 @@ jobs:
       - name: Log in to Gitea container registry
         run: |
           mkdir -p ~/.docker
-          AUTH=$(echo -n "${{ gitea.actor }}:${{ secrets.REGISTRY_TOKEN }}" | base64 -w 0)
+          AUTH=$(echo -n "${{ gitea.actor }}:${{ secrets.PERSONAL_ACCESS_TOKEN }}" | base64 -w 0)
           echo "{\"auths\":{\"${{ vars.REGISTRY_ENDPOINT }}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
       - name: Build and push
         run: |

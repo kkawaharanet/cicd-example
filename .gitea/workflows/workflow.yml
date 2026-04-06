@@ -59,10 +59,9 @@ jobs:
           echo "{\"auths\":{\"${{ vars.REGISTRY_ENDPOINT }}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
       - name: Build and push
         run: |
-          IMAGE_NAME=$(node -p "require('./frontend/package.json').name")
+          IMAGE_NAME=$(node -p "require('./package.json').name")
           TAG_NAME=$(node -p "require('./package.json').version")
           docker buildx build \
-            -f frontend/Dockerfile \
             --platform linux/amd64,linux/arm64 \
             --tag ${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:$TAG_NAME \
             --tag ${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:latest \

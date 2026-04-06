@@ -33,3 +33,41 @@ jobs:
         run: npm ci
       - name: Run test
         run: npm run test
+  build:
+    runs-on: ubuntu-latest
+    needs: [typecheck, test] # typecheckとtestが通ったら実行する
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-config-inline: |
+            [registry."${{ vars.REGISTRY_ENDPOINT }}"]
+              http = true
+              insecure = true
+      - name: Log in to Gitea container registry
+        run: |
+          mkdir -p ~/.docker
+          AUTH=$(echo -n "${{ gitea.actor }}:${{ secrets.REGISTRY_TOKEN }}" | base64 -w 0)
+          echo "{\"auths\":{\"${{ vars.REGISTRY_ENDPOINT }}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
+      - name: Build and push
+        run: |
+          IMAGE_NAME=$(node -p "require('./frontend/package.json').name")
+          TAG_NAME=$(node -p "require('./package.json').version")
+          docker buildx build \
+            -f frontend/Dockerfile \
+            --platform linux/amd64,linux/arm64 \
+            --tag ${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:$TAG_NAME \
+            --tag ${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:latest \
+            --cache-from type=registry,ref=${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:buildcache \
+            --cache-to type=registry,ref=${{ vars.REGISTRY_ENDPOINT }}/${{ gitea.repository_owner }}/$IMAGE_NAME:buildcache,mode=max \
+            --provenance=false \
+            --push \
+            .

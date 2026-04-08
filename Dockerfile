@@ -22,8 +22,5 @@ RUN npm ci --omit=dev
 # ビルド成果物をコピーする
 COPY --from=build /app/dist ./dist
 
-# データを読み書きするためのディレクトリを用意する
-RUN mkdir -p /app/data
-
-# nodeプロセスを直接起動する (シグナルハンドリングの改善)
+# アプリケーションを起動する
 CMD ["node", "dist/app.js"]

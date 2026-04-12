@@ -39,6 +39,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: Extract registry endpoint
         run: echo "REGISTRY=$(echo '${{ gitea.server_url }}' | sed 's|^https://||;s|^http://||')" >> $GITHUB_ENV
       - name: Set up QEMU
@@ -51,15 +55,14 @@ jobs:
               http = true
               insecure = true
       - name: Log in to Gitea container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ gitea.actor }}
-          password: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          mkdir -p ~/.docker
+          AUTH=$(echo -n "${{ gitea.actor }}:${{ secrets.PERSONAL_ACCESS_TOKEN }}" | base64 -w 0)
+          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
       - name: Build and push
         run: |
-          IMAGE_NAME=$(jq -r '.name' package.json)
-          TAG_NAME=$(jq -r '.version' package.json)
+          IMAGE_NAME=$(node -p "require('./package.json').name")
+          TAG_NAME=$(node -p "require('./package.json').version")
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --tag ${{ env.REGISTRY }}/${{ gitea.repository_owner }}/$IMAGE_NAME:$TAG_NAME \

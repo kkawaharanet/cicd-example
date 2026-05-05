@@ -10,6 +10,6 @@ describe("足し算API", () => {
 
     // 足し算の結果が期待値と一致すること
     const body = await response.json();
-    expect(body).toEqual({ result: 2 });
+    expect(body).toEqual({ result: 3 });
   });
 });
